@@ -1,0 +1,18 @@
+##Before running terraform plan export SubId
+az account show
+export ARM_SUBSCRIPTION_ID="<Sub Id>"
+
+##To check cluster accessability,
+az aks get-credentials --resource-group robot-rg --name robot-cluster
+kubectl config current-context
+kubectl get nodes
+
+##Install ArgoCD and configure
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.14.6/manifests/install.yaml
+
+kubectl get pods -n argocd -w
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+kubectl get secret argocd-initial-admin-secret -n argocd  -o jsonpath="{.data.password}" | base64 -d
+kubectl get svc argocd-server -n argocd -o jsonpath="{.status.loadBalancer.ingress[0].ip}"
